@@ -34,9 +34,7 @@ def main():
     prompt = args.user_prompt
     verbose_flag = args.verbose
 
-    # Context
     messages = [types.Content(role="user", parts=[types.Part(text=prompt)])]
-
     response = client.models.generate_content(
         model=current_model, contents=messages
     )
