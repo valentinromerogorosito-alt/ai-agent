@@ -1,15 +1,10 @@
 import os
+from .check_path_get_target import check_path_get_target
 
 
 def get_files_info(working_directory, directory="."):
-    working_dir_abs = os.path.abspath(working_directory)
-    target_dir = os.path.normpath(os.path.join(working_dir_abs, directory))
+    target_dir = check_path_get_target(working_directory, directory, "i") 
 
-    valid_target_dir = os.path.commonpath([working_dir_abs, target_dir]) == working_dir_abs
-    if not valid_target_dir:
-        return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
-    if not os.path.isdir(target_dir):
-        return f'Error: "{directory}" is not a directory'
     try:
         target_dir_contents_info = get_directory_contents_info(target_dir)
         directory_print_contents_info(target_dir_contents_info)
