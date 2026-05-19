@@ -3,6 +3,8 @@ import argparse
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from prompts import system_prompt
+from call_function import available_functions 
 
 
 def get_client():
@@ -18,17 +20,21 @@ def parse_args():
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     return parser.parse_args()
 
-def print_formatter(prompt, prompt_tokens, candidate_tokens, response_text, verbose_flag):
+def print_formatter(prompt, prompt_tokens, candidate_tokens, response_text, response_function_calls, verbose_flag):
     if verbose_flag:
         print(f"User prompt: {prompt}")
         print(f"Prompt tokens: {prompt_tokens}")
         print(f"Response tokens: {candidate_tokens}")
+    if response_function_calls is not None:
+        for function_call in response_function_calls:
+            print(f"Calling function: {function_call.name}({function_call.args})")
     print(f"Response:\n   {response_text}")
 
 
 def main():
     client = get_client()
     current_model="gemini-flash-latest"
+    #current_model="gemini-2.5-flash"
 
     args = parse_args()
     prompt = args.user_prompt
@@ -36,15 +42,25 @@ def main():
 
     messages = [types.Content(role="user", parts=[types.Part(text=prompt)])]
     response = client.models.generate_content(
-        model=current_model, contents=messages
+        model=current_model, 
+        contents=messages,
+        config=types.GenerateContentConfig(
+            tools=[available_functions],
+            system_instruction=system_prompt
+        )
     )
-
     if response.usage_metadata == None:
         raise RuntimeError("response.usage_metadata is None, likely to failed API request")
     prompt_tokens = response.usage_metadata.prompt_token_count
     candidate_tokens = response.usage_metadata.candidates_token_count
-
-    print_formatter(prompt, prompt_tokens, candidate_tokens, response.text, verbose_flag)
+    print_formatter(
+        prompt, 
+        prompt_tokens, 
+        candidate_tokens, 
+        response.text, 
+        response.function_calls, 
+        verbose_flag
+    )
 
 if __name__ == "__main__":
     main()

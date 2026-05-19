@@ -2,7 +2,7 @@ import os
 
 
 def check_path_get_target(working_directory, current_path, option):
-    options = {"i": "list", "c": "read", "w": "write to"}
+    options = {"i": "list", "c": "read", "w": "write to", "r": "execute"}
     try: 
         working_dir_abs = os.path.abspath(working_directory)
         target = os.path.normpath(os.path.join(working_dir_abs, current_path))
@@ -30,6 +30,15 @@ def check_path_get_target(working_directory, current_path, option):
             # Create nested directories if they don't exist
             os.makedirs(current_path, exist_ok=True)
             return target 
+
+        # run_python_file
+        if option == "r":
+            if not os.path.isfile(target):
+                return f'Error: "{current_path}" does not exist or is not a regular file'
+            if not target.endswith(".py"): 
+                return f'Error: "{current_path}" is not a Python file'
+            return target 
+
 
 
     except FileNotFoundError:

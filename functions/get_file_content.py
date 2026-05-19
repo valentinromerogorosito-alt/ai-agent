@@ -1,11 +1,13 @@
 import os
-from .check_path_get_target import check_path_get_target
+from google import genai
+from google.genai import types
 from config import MAX_CHARS
+from .check_path_get_target import check_path_get_target
 
 
 def get_file_content(working_directory, file_path):
     try: 
-       target_file = check_path_get_target(working_directory, file_path, "c")
+        target_file = check_path_get_target(working_directory, file_path, "c")
 
         with open(target_file, "r") as f: 
             file_content_string = f.read(MAX_CHARS)
@@ -19,3 +21,17 @@ def get_file_content(working_directory, file_path):
     except Exception as e:
         return f'Error: get_file_content({working_directory}, {file_path}) did not work as expected: {e}'
 
+schema_get_file_content = types.FunctionDeclaration(
+    name="get_file_content",
+    description="Gets the contents of a file from a specified path relative to the working directory",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING, 
+                description="File path relative to the working directory to the file that it's contents are going to be obtained",
+            ),
+        },
+        required=["file_path"],
+    ),
+)
