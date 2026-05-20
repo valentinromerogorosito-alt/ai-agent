@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from prompts import system_prompt
-from call_function import available_functions 
+from call_function import available_functions, call_function 
 
 
 def get_client():
@@ -25,16 +25,27 @@ def print_formatter(prompt, prompt_tokens, candidate_tokens, response_text, resp
         print(f"User prompt: {prompt}")
         print(f"Prompt tokens: {prompt_tokens}")
         print(f"Response tokens: {candidate_tokens}")
+    functions_results = []
     if response_function_calls is not None:
         for function_call in response_function_calls:
             print(f"Calling function: {function_call.name}({function_call.args})")
+            function_call_result = call_function(function_call)
+            if not function_call_result.parts:
+                raise Exception("Error: function call returned an empty list")
+            if function_call_result.parts[0].function_response is None:
+                raise Exception("Error: function call returned a None value FunctionResponse object")
+            if function_call_result.parts[0].function_response.response is None:
+                raise Exception("Error: function call returned a None value FunctionResponse.response")
+            functions_results.append(function_call_result.parts[0]) 
+            if verbose_flag:
+                print(f"-> {function_call_result.parts[0].function_response.response}")
     print(f"Response:\n   {response_text}")
 
 
 def main():
     client = get_client()
     current_model="gemini-flash-latest"
-    #current_model="gemini-2.5-flash"
+    # current_model="gemini-2.5-flash"
 
     args = parse_args()
     prompt = args.user_prompt
